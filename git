@@ -1,0 +1,65 @@
+
+import React, { useState } from 'react';
+import { useCurrentMessagingClient } from './your-file';
+
+function ChatInterface() {
+  const client = useCurrentMessagingClient();
+
+  const [address, setAddress] = useState('');
+  const [message, setMessage] = useState('Hello!');
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+
+  const sendMessage = async () => {
+    if (!address.trim() || !message.trim()) {
+      setStatus('Enter a recipient and message.');
+      return;
+    }
+
+    if (!client) {
+      setStatus('Messaging client unavailable.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setStatus('');
+
+      await client.conversations
+        .newChatContext(address.trim())
+        .sendMessage(message.trim());
+
+      setStatus('Message sent successfully!');
+      setMessage('');
+    } catch (error) {
+      console.error('Messaging error:', error);
+      setStatus('Unable to send message.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+        placeholder="Recipient address"
+      />
+
+      <input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Write a message"
+      />
+
+      <button onClick={sendMessage} disabled={loading}>
+        {loading ? 'Sending...' : 'Send Message'}
+      </button>
+
+      <p>{status}</p>
+    </div>
+  );
+}
+
+export default ChatInterface;
